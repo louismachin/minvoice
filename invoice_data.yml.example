@@ -1,0 +1,9 @@
+from_name: 'Louis Machin'
+from_email: 'louis@shukra.dev'
+from_address: "Flat 1, Example Road\nSalisbury, Wiltshire\nSP1 2AB"
+account_name: 'SHUKRA SOFTWARE LTD'
+bank_name: null
+account_number: '98765432'
+sort_code: '01-02-03'
+company_reg_number: '12345678'
+website: 'https://shukra.dev'
