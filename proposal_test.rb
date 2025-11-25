@@ -146,14 +146,14 @@ proposal_data = {
     { 
       reference: 'RM #3456', 
       description: 'Integration of Tic-Tac API for medication input',
-      hours: 35,
-      rate: 6
+      hours: 6,
+      rate: 35
     },
     { 
       reference: 'RM #3457', 
       description: 'Integration of Tic-Tac API for interaction warnings',
-      hours: 35,
-      rate: 5
+      hours: 5,
+      rate: 35
     }
   ],
   payment_terms: 'Net 30 upon completion',
