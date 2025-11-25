@@ -4,7 +4,7 @@ require 'date'
 
 Prawn::Fonts::AFM.hide_m17n_warning = true
 
-def generate_invoice(invoice_data, filename = 'invoice.pdf')
+def generate_proposal(proposal_data, filename = 'proposal.pdf')
     Prawn::Document.generate(filename, page_size: 'A4', margin: 50) do |pdf|
     bg_color = 'FFFFFF'
     text_color = '1a1a1a'
@@ -22,7 +22,7 @@ def generate_invoice(invoice_data, filename = 'invoice.pdf')
     end
 
     pdf.bounding_box([pdf.bounds.width - 300, logo_position], width: 300) do
-        pdf.text "INVOICE", size: 50, style: :bold, align: :right, character_spacing: 2
+        pdf.text "WORK PROPOSAL", size: 32, style: :bold, align: :right, character_spacing: 2
     end
 
     pdf.move_down 60
@@ -32,39 +32,39 @@ def generate_invoice(invoice_data, filename = 'invoice.pdf')
     pdf.bounding_box([0, bill_info_position], width: 300) do
         pdf.text "BILLED TO:", style: :bold, size: 11
         pdf.move_down 8
-        pdf.text invoice_data[:to_name], size: 11
+        pdf.text proposal_data[:to_name], size: 11
         pdf.move_down 4
-        pdf.text invoice_data[:to_address], size: 11
+        pdf.text proposal_data[:to_address], size: 11
         pdf.move_down 4
-        pdf.text invoice_data[:to_phone], size: 11 if invoice_data[:to_phone]
+        pdf.text proposal_data[:to_phone], size: 11 if proposal_data[:to_phone]
     end
 
     pdf.bounding_box([pdf.bounds.width - 200, bill_info_position], width: 200) do
         pdf.text 'Shukra Software Ltd', align: :right, size: 11, style: :bold
-        pdf.text "Invoice: #{invoice_data[:invoice_number]}", align: :right, size: 11
-        pdf.text invoice_data[:date], align: :right, size: 11
+        pdf.text "Proposal: #{proposal_data[:proposal_number]}", align: :right, size: 11
+        pdf.text proposal_data[:date], align: :right, size: 11
     end
 
     pdf.move_down 80
 
-    table_data = [['Item', 'Quantity', 'Unit Price', 'Total']]
+    table_data = [['Reference', 'Item', 'Total']]
 
-    invoice_data[:items].each do |item|
+    proposal_data[:items].each do |item|
+        item[:price] = item[:rate] * item[:est_time]
         table_data << [
+        item[:reference],
         item[:description],
-        item[:quantity].to_s,
-        "£#{sprintf('%d', item[:price])}",
-        "£#{sprintf('%d', item[:quantity] * item[:price])}"
+        "£#{sprintf('%d', item[:price])}"
         ]
     end
 
-    subtotal = invoice_data[:items].sum { |item| item[:quantity] * item[:price] }
-    tax_rate = invoice_data[:tax_rate] || 0
+    subtotal = proposal_data[:items].sum { |item| item[:price] }
+    tax_rate = proposal_data[:tax_rate] || 0
     tax = subtotal * tax_rate
     total = subtotal + tax
 
-    table_data << ['', '', 'Subtotal', "£#{sprintf('%d', subtotal)}"]
-    table_data << ['', '', "Tax (#{(tax_rate * 100).to_i}%)", "£#{sprintf('%d', tax)}"]
+    table_data << ['', 'Subtotal', "£#{sprintf('%d', subtotal)}"]
+    table_data << ['', "Tax (#{(tax_rate * 100).to_i}%)", "£#{sprintf('%d', tax)}"]
 
     cell_style = { 
         borders: [:top, :bottom], 
@@ -75,14 +75,14 @@ def generate_invoice(invoice_data, filename = 'invoice.pdf')
     }
 
     pdf.table(table_data, width: pdf.bounds.width, cell_style: cell_style) do
-        item_count = invoice_data[:items].length
+        item_count = proposal_data[:items].length
         rows(1..item_count).borders = []
         row(-2).borders = []
         row(-1).borders = []
         row(0).font_style = :bold
-        row(-2).columns(2..3).font_style = :bold
-        row(-1).columns(2..3).font_style = :bold
-        columns(1..3).align = :right
+        row(-2).columns(1..2).font_style = :bold
+        row(-1).columns(1..2).font_style = :bold
+        columns(-1).align = :right
     end
 
     pdf.move_down 2
@@ -102,37 +102,37 @@ def generate_invoice(invoice_data, filename = 'invoice.pdf')
     pdf.bounding_box([0, footer_cursor], width: 300) do
         pdf.text "PAYMENT INFORMATION", style: :bold, size: 11
         pdf.move_down 8
-        pdf.text "Name: #{invoice_data[:account_name]}", size: 11 if invoice_data[:account_name]
-        pdf.text "Bank Name: #{invoice_data[:bank_name]}", size: 11 if invoice_data[:bank_name]
-        pdf.text "Account Number: #{invoice_data[:account_number]}", size: 11 if invoice_data[:account_number]
-        pdf.text "Sort Code: #{invoice_data[:sort_code]}", size: 11 if invoice_data[:sort_code]
-        pdf.text "Pay by: #{invoice_data[:due_date]}", size: 11 if invoice_data[:due_date]
+        pdf.text "Name: #{proposal_data[:account_name]}", size: 11 if proposal_data[:account_name]
+        pdf.text "Bank Name: #{proposal_data[:bank_name]}", size: 11 if proposal_data[:bank_name]
+        pdf.text "Account Number: #{proposal_data[:account_number]}", size: 11 if proposal_data[:account_number]
+        pdf.text "Sort Code: #{proposal_data[:sort_code]}", size: 11 if proposal_data[:sort_code]
+        pdf.text "Pay by: #{proposal_data[:due_date]}", size: 11 if proposal_data[:due_date]
         pdf.move_down 20
-        pdf.text "Company Registration Number: #{invoice_data[:company_reg_number]}", size: 11 if invoice_data[:company_reg_number]
+        pdf.text "Company Registration Number: #{proposal_data[:company_reg_number]}", size: 11 if proposal_data[:company_reg_number]
     end
 
     pdf.bounding_box([pdf.bounds.width - 280, footer_cursor], width: 280) do
         pdf.text "CONTACT INFORMATION", style: :bold, size: 11, align: :right
         pdf.move_down 4
-        pdf.text invoice_data[:from_name], size: 11, align: :right if invoice_data[:from_name]
+        pdf.text proposal_data[:from_name], size: 11, align: :right if proposal_data[:from_name]
         pdf.move_down 4
-        pdf.text invoice_data[:from_email], size: 11, align: :right if invoice_data[:from_email]
+        pdf.text proposal_data[:from_email], size: 11, align: :right if proposal_data[:from_email]
         pdf.move_down 4
-        pdf.text invoice_data[:from_address], size: 11, align: :right if invoice_data[:from_address]
+        pdf.text proposal_data[:from_address], size: 11, align: :right if proposal_data[:from_address]
     end
     end
 
     filename
 end
 
-invoice_data = {
-    invoice_number: 'CP002',
+proposal_data = {
+    proposal_number: 'CM001',
     date: '31 October 2025',
     due_date: nil,
     website: 'https://shukra.dev',
-    to_name: 'CarePlus Pharmacy',
+    to_name: 'CareMeds Ltd',
     to_phone: '020 8207 7999',
-    to_address: "Unit 2, 49 Theobald St.\nBorehamwood\nWD6 4RZ",
+    to_address: "Unit 7, Brickfield Industrial Estate\nChandlers Ford\nSO53 4DR",
     from_name: 'Louis Machin',
     from_email: 'louis@shukra.dev',
     from_address: "Flat 2, 49 St. Marks Road\nSalisbury, Wiltshire\nSP1 3AY",
@@ -141,11 +141,10 @@ invoice_data = {
     sort_code: '04-00-06',
     company_reg_number: '15392867',
     items: [
-        { description: 'Dev. hours for \'CarePlus Stock Control App\' (1 Oct 2025)', quantity: 1, price: 25 },
-        { description: 'Dev. hours for \'CarePlus Stock Control App\' (2 Oct 2025)', quantity: 2, price: 25 },
-        { description: 'Dev. hours for \'CarePlus Stock Control App\' (9 Oct 2025)', quantity: 1, price: 25 },
+        { reference: 'RM #1234', description: '\'EasyMAR\' MultiMeds lids and seals generation', rate: 35, est_time: 6 },
+        { reference: 'RM #1245', description: '\'EasyMAR\' simple rostering implementation', rate: 35, est_time: 10 },
     ],
     tax_rate: 0.0
 }
 
-generate_invoice(invoice_data)
+generate_proposal(proposal_data)
