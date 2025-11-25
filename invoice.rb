@@ -50,11 +50,23 @@ def generate_invoice(invoice_data, filename = 'invoice.pdf')
     table_data = [['Item', 'Quantity', 'Unit Price', 'Total']]
 
     invoice_data[:items].each do |item|
+        quantity = item[:quantity] ? item[:quantity] : 1
+        item[:quantity] = quantity
+        if item[:hours] && item[:rate]
+            price = item[:hours] * item[:rate]
+            item[:price] = price
+        else
+            price = item[:price]
+        end
+        description = item[:description]
+        if item[:reference]
+            description = description + " (#{item[:reference]})"
+        end
         table_data << [
-        item[:description],
-        item[:quantity].to_s,
-        "£#{sprintf('%d', item[:price])}",
-        "£#{sprintf('%d', item[:quantity] * item[:price])}"
+            description,
+            quantity.to_s,
+            "£#{sprintf('%d', price)}",
+            "£#{sprintf('%d', quantity * price)}"
         ]
     end
 
@@ -126,13 +138,13 @@ def generate_invoice(invoice_data, filename = 'invoice.pdf')
 end
 
 invoice_data = {
-    invoice_number: 'CP002',
-    date: '31 October 2025',
+    invoice_number: 'CM001',
+    date: '12 December 2025',
     due_date: nil,
     website: 'https://shukra.dev',
-    to_name: 'CarePlus Pharmacy',
-    to_phone: '020 8207 7999',
-    to_address: "Unit 2, 49 Theobald St.\nBorehamwood\nWD6 4RZ",
+    to_name: 'CareMeds Limited',
+    to_phone: '01794 400 100',
+    to_address: "Unit 7, Brickfield Lane\nChandlers Ford, Hampshire\nSO53 4DR",
     from_name: 'Louis Machin',
     from_email: 'louis@shukra.dev',
     from_address: "Flat 2, 49 St. Marks Road\nSalisbury, Wiltshire\nSP1 3AY",
@@ -141,9 +153,24 @@ invoice_data = {
     sort_code: '04-00-06',
     company_reg_number: '15392867',
     items: [
-        { description: 'Dev. hours for \'CarePlus Stock Control App\' (1 Oct 2025)', quantity: 1, price: 25 },
-        { description: 'Dev. hours for \'CarePlus Stock Control App\' (2 Oct 2025)', quantity: 2, price: 25 },
-        { description: 'Dev. hours for \'CarePlus Stock Control App\' (9 Oct 2025)', quantity: 1, price: 25 },
+        { 
+            reference: 'RM #1234', 
+            description: 'Seals and lid generation for a patient and care provider',
+            hours: 8,
+            rate: 35
+        },
+        { 
+            reference: 'RM #3456', 
+            description: 'Integration of Tic-Tac API for medication input',
+            hours: 35,
+            rate: 6
+        },
+        { 
+            reference: 'RM #3457', 
+            description: 'Integration of Tic-Tac API for interaction warnings',
+            hours: 35,
+            rate: 5
+        }
     ],
     tax_rate: 0.0
 }
